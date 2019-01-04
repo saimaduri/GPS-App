@@ -3,6 +3,8 @@ package com.example.saicm.gps_app;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -11,21 +13,25 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView tvlatitude;
     TextView tvlongitude;
+    TextView tvaddress;
     Location location;
+
+    List<Address> addresslist;
 
     double latitude;
     double longitude;
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
         tvlatitude = findViewById(R.id.latitude);
         tvlongitude = findViewById(R.id.longitude);
+        tvaddress = findViewById(R.id.address);
+
+        final Geocoder geocoder = new Geocoder(this, Locale.US);
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -44,6 +53,17 @@ public class MainActivity extends AppCompatActivity {
                 longitude = location.getLongitude();
                 tvlatitude.setText(latitude + "");
                 tvlongitude.setText(longitude + "");
+
+                try {
+                    addresslist = geocoder.getFromLocation(latitude, longitude, 1);
+                    Log.d("CHECK GEOCODER", "onLocationChanged: " + geocoder.getFromLocation(latitude, longitude, 1));
+                    tvaddress.setText(addresslist.get(addresslist.size()-1).getAddressLine(0)+"");
+                    if (addresslist.size() > 1){
+                        Toast.makeText(MainActivity.this, addresslist.get(addresslist.size() - 2).getAddressLine(0), Toast.LENGTH_LONG).show();
+                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
