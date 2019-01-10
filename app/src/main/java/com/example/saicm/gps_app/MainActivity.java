@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,12 +27,13 @@ public class MainActivity extends AppCompatActivity {
     TextView tvlatitude;
     TextView tvlongitude;
     TextView tvaddress;
-    Location location;
+    TextView tvdistance;
 
-    List<Address> addresslist;
+    ArrayList<Address> addresslist;
 
     double latitude;
     double longitude;
+    double distance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +43,12 @@ public class MainActivity extends AppCompatActivity {
         tvlatitude = findViewById(R.id.latitude);
         tvlongitude = findViewById(R.id.longitude);
         tvaddress = findViewById(R.id.address);
+        tvdistance = findViewById(R.id.distance);
 
         final Geocoder geocoder = new Geocoder(this, Locale.US);
-
+        Log.d("TAG", "onCreate: " + geocoder.isPresent());
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
+        addresslist = new ArrayList<>();
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -55,15 +58,20 @@ public class MainActivity extends AppCompatActivity {
                 tvlongitude.setText(longitude + "");
 
                 try {
-                    addresslist = geocoder.getFromLocation(latitude, longitude, 1);
-                    Log.d("CHECK GEOCODER", "onLocationChanged: " + geocoder.getFromLocation(latitude, longitude, 1));
+                    addresslist.add(geocoder.getFromLocation(latitude, longitude, 1).get(0));
+                    Log.d("CHECK GEOCODER", "onLocationChanged: " + addresslist);
                     tvaddress.setText(addresslist.get(addresslist.size()-1).getAddressLine(0)+"");
                     if (addresslist.size() > 1){
-                        Toast.makeText(MainActivity.this, addresslist.get(addresslist.size() - 2).getAddressLine(0), Toast.LENGTH_LONG).show();
-                     }
+                        Location last = new Location("last location");
+                        last.setLatitude(addresslist.get(addresslist.size()-2).getLatitude());
+                        last.setLongitude(addresslist.get(addresslist.size()-2).getLongitude());
+                        distance+=location.distanceTo(last);
+                        tvdistance.setText("Distance so far: " + distance/1609.344 + " miles");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
             }
 
             @Override
@@ -97,3 +105,4 @@ public class MainActivity extends AppCompatActivity {
 
     }
 }
+
